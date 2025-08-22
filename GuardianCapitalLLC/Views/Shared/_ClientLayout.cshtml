@@ -1,0 +1,235 @@
+﻿<!DOCTYPE html>
+<html lang="en" style="--primary-bg-color: #0e1032; --primary-bg-hover: #0e103295; --primary-bg-border: #0e1032; --primary-transparentcolor: #0e103220; --primary01: rgba(14, 16, 50, 0.1); --primary02: rgba(14, 16, 50, 0.2); --primary03: rgba(14, 16, 50, 0.3); --primary06: rgba(14, 16, 50, 0.6); --primary09: rgba(14, 16, 50, 0.9); --primary05: rgba(14, 16, 50, 0.5); --dark-null: #0e1032; --transparent-null: #0e103295; --darkprimary-null: #0e103220; --transparentprimary-null: #0e103220;">
+<head>
+	<meta charset="UTF-8">
+	<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+	<!-- Title -->
+	<title>@ViewData["Title"]</title>
+
+	<!-- Favicon -->
+	<link rel="icon" href="~/img/brand/favicon.png" type="image/x-icon" />
+
+	<!-- Icons css -->
+	<link href="~/css/icons.css" rel="stylesheet">
+
+	<!--  bootstrap css-->
+	<link id="style" href="~/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+
+	<!--- Style css --->
+	<link href="~/css/style.css" rel="stylesheet">
+	<link href="~/css/style-dark.css" rel="stylesheet">
+	<link href="~/css/style-transparent.css" rel="stylesheet">
+
+	<!---Skinmodes css-->
+	<link href="~/css/skin-modes.css" rel="stylesheet" />
+
+	<!--- Animations css-->
+	<link href="~/css/animate.css" rel="stylesheet">
+
+	<!-- INTERNAL Switcher css -->
+	<link href="~/switcher/css/switcher.css" rel="stylesheet" />
+	<link href="~/switcher/demo.css" rel="stylesheet" />
+
+	<link href="~/css/account.css?v=2" rel="stylesheet" />
+
+	<style>
+		/* Limit all logo.png images to 36px height */
+		img[src*="logo.png"] {
+			max-height: 36px !important;
+			width: auto !important;
+		}
+	</style>
+</head>
+<body class="main-body app ltr sidebar-gone horizontal">
+
+	<!-- Loader -->
+	<div id="global-loader">
+		<img src="~/img/loader.svg" class="loader-img" alt="Loader">
+	</div>
+	<!-- /Loader -->
+	<!-- Page -->
+	<div class="page">
+		<div>
+			<!-- main-header -->
+			<div class="main-header side-header sticky nav nav-item account-information">
+				<div class=" main-container container-fluid">
+					<div class="main-header-left ">
+						<div class="responsive-logo">
+							<a asp-controller="Account" asp-action="Index" class="header-logo">
+								<img src="~/img/brand/logo.png" class="mobile-logo logo-1" alt="logo">
+							</a>
+						</div>
+						<div class="app-sidebar__toggle" data-bs-toggle="sidebar">
+							<a class="open-toggle" href="javascript:void(0);"><i class="header-icon fe fe-align-left"></i></a>
+							<a class="close-toggle" href="javascript:void(0);"><i class="header-icon fe fe-x"></i></a>
+						</div>
+						<div class="logo-horizontal">
+							<a asp-controller="Account" asp-action="Index" class="header-logo">
+								<img src="~/img/brand/logo.png" class="mobile-logo logo-1" alt="logo">
+							</a>
+						</div>
+					</div>
+					<div class="main-header-right">
+						<button class="navbar-toggler navresponsive-toggler d-lg-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent-4" aria-controls="navbarSupportedContent-4" aria-expanded="false" aria-label="Toggle navigation">
+							<span class="navbar-toggler-icon fe fe-more-vertical "></span>
+						</button>
+						<div class="mb-0 navbar navbar-expand-lg navbar-nav-right responsive-navbar navbar-dark p-0">
+							<div class="collapse navbar-collapse" id="navbarSupportedContent-4">
+								<ul class="nav nav-item header-icons navbar-nav-right ms-auto">
+									@if (User.Identity.IsAuthenticated && ViewBag.Hide != true)
+									{
+										<li class="nav-item main-header-notification mx-2 tx-bold">
+											<a href="#" id="logout-link" class="text-danger">LOG OUT</a>
+										</li>
+									}
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /main-header -->
+			<!-- main-sidebar -->
+			<div class="sticky account-information" style="z-index:1000;">
+				<aside class="app-sidebar">
+					<div class="main-sidebar-header active">
+						<a class="header-logo active" asp-controller="Account" asp-action="Index">
+							<img src="~/img/brand/logo.png" class="main-logo  desktop-logo" alt="logo">
+							<img src="~/img/brand/favicon.png" class="main-logo  mobile-logo" alt="logo">
+						</a>
+					</div>
+					<div class="main-sidemenu">
+						@if (User.Identity.IsAuthenticated && !(ViewBag.IsBanned ?? false))
+						{
+							<ul class="side-menu">
+								<li class="slide">
+									<a class="side-menu__item" asp-controller="Account" asp-action="Index"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-home mg-r-10"></i></svg><span class="side-menu__label">Home</span></a>
+								</li>
+								<li class="slide">
+									<a class="side-menu__item" asp-controller="Account" asp-action="Balance"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-credit-card mg-r-10"></i></svg><span class="side-menu__label">Your Money</span></a>
+								</li>
+								<li class="slide">
+									<a class="side-menu__item" asp-controller="Account" asp-action="Activity"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-bars mg-r-10"></i></svg><span class="side-menu__label">Activity</span></a>
+								</li>
+							</ul>
+						}
+					</div>
+				</aside>
+			</div>
+			<!-- main-sidebar -->
+		</div>
+		<div>
+			<!-- main-content -->
+			<div class="main-content app-content">
+				<!-- container -->
+				<div class="main-container container-fluid">
+					@RenderBody()
+				</div>
+			</div>
+			<!-- Footer opened -->
+			<div class="main-footer text-white justify-content-between d-flex flex-lg-row flex-column align-items-center">
+				<div>
+					<div class="breadcrumb-header justify-content-between m-0">
+						<div class="left-content">
+							©<script>document.write(new Date().getFullYear());</script> Global International Trust Bank.
+						</div>
+					</div>
+				</div>
+				<div class="mt-3 mt-lg-0">
+					<div class="breadcrumb-header justify-content-between m-0">
+						<a asp-controller="Home" asp-action="TermsNConditions" class="text-white">
+							Terms & Conditions
+						</a>
+					</div>
+				</div>
+			</div>
+			<!-- Footer closed -->
+		</div>
+	</div>
+	<!-- End Page -->
+
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+	<script>
+		document.getElementById("logout-link").addEventListener("click", function (e) {
+			e.preventDefault();
+
+			Swal.fire({
+					title: 'Are you sure you want to log out?',
+					icon: 'warning',
+					showCancelButton: true,
+					confirmButtonText: 'Yes, log out',
+					cancelButtonText: 'Cancel',
+					customClass: {
+						popup: 'account-information',
+						cancelButton: 'btn btn-primary text-white',
+						confirmButton: 'btn btn-danger text-white'
+					}
+			}).then((result) => {
+				if (result.isConfirmed) {
+					window.location.href = '/Account/Logout';
+				}
+			});
+		});
+	</script>
+
+	<!-- JQuery min js -->
+	<script src="~/plugins/jquery/jquery.min.js"></script>
+
+	<!-- Bootstrap js -->
+	<script src="~/plugins/bootstrap/js/popper.min.js"></script>
+	<script src="~/plugins/bootstrap/js/bootstrap.min.js"></script>
+
+	<!-- Moment js -->
+	<script src="~/plugins/moment/moment.js"></script>
+
+	<!-- P-scroll js -->
+	<script src="~/plugins/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+	<script src="~/plugins/perfect-scrollbar/p-scroll.js"></script>
+
+	<!-- eva-icons js -->
+	<script src="~/js/eva-icons.min.js"></script>
+
+	<!-- Sidebar js -->
+	<script src="~/plugins/side-menu/sidemenu.js"></script>
+
+	<!-- Sticky js -->
+	<script src="~/js/sticky.js"></script>
+
+	<!-- Right-sidebar js -->
+	<script src="~/plugins/sidebar/sidebar.js"></script>
+	<script src="~/plugins/sidebar/sidebar-custom.js"></script>
+
+	<!-- Theme Color js -->
+	<script src="~/js/themecolor.js"></script>
+
+	<!-- custom js -->
+	<script src="~/js/custom1.js"></script>
+
+	<!-- Switcher js -->
+	<script src="~/switcher/js/switcher.js"></script>
+
+	<!-- Internal Data tables -->
+	<script src="~/plugins/datatable/js/jquery.dataTables.min.js"></script>
+	<script src="~/plugins/datatable/js/dataTables.bootstrap5.js"></script>
+	<script src="~/plugins/datatable/js/dataTables.buttons.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
+	<script src="~/plugins/datatable/js/jszip.min.js"></script>
+	<script src="~/plugins/datatable/pdfmake/pdfmake.min.js"></script>
+	<script src="~/plugins/datatable/pdfmake/vfs_fonts.js"></script>
+	<script src="~/plugins/datatable/js/buttons.html5.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.print.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.colVis.min.js"></script>
+	<script src="~/plugins/datatable/dataTables.responsive.min.js"></script>
+	<script src="~/plugins/datatable/responsive.bootstrap5.min.js"></script>
+	<script src="~/lib/qrcode.js"></script>
+	<script src="~/js/table-data.js"></script>
+
+</body>
+</html>

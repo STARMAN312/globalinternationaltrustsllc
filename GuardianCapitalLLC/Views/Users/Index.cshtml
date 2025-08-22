@@ -1,0 +1,99 @@
+﻿@model List<ApplicationUser>
+@using System.Globalization
+
+<div class="card bg-gray-200 bd-0 mt-2">
+	<div class="card-body">
+		<a asp-controller="Users" asp-action="Create" class="btn btn-primary"><i class="mdi mdi-account-plus me-2"></i>Create New Client</a>
+		<div class="table-responsive  export-table mt-2">
+			<table id="file-datatable" class="table table-bordered text-nowrap key-buttons border-bottom">
+				<thead>
+					<tr>
+						<th class="border-bottom-0">User Name</th>
+						<th class="border-bottom-0">Full Name</th>
+						<th class="border-bottom-0">Personal Phone</th>
+						<th class="border-bottom-0">Personal Email</th>
+						<th class="border-bottom-0">Checking Balance</th>
+						<th class="border-bottom-0">Savings Balance</th>
+						<th class="border-bottom-0">Trust Fund Balance</th>
+						<th class="border-bottom-0">Options</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var user in Model)
+					{
+						<tr>
+							<td>@user.UserName</td>
+							<td>@user.FullName</td>
+							<td>@user.PersonalPhone</td>
+							<td>@user.PersonalEmail</td>
+							@foreach (var account in user.BankAccounts.OrderBy(a => a.Type))
+							{
+								<td data-usd="@account.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+									<strong class="balance-text">$@account.Balance.ToString("N2")</strong>
+								</td>
+							}
+							<td>
+								<a asp-controller="Users" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-success">Edit</a>
+								<a asp-controller="Users" asp-action="Details" asp-route-id="@user.Id" class="btn btn-info">Details</a>
+								<a asp-controller="Users" asp-action="Delete" asp-route-id="@user.Id" class="btn btn-danger">Delete</a>
+								@if (user.IsBanned)
+								{
+									<form asp-controller="Users" asp-action="UnBanClient" asp-route-id="@user.Id" method="post" class="d-inline">
+										<button type="submit" class="btn btn-info">Un-ban Client</button>
+									</form>
+								}
+								else
+								{
+									<a asp-controller="Users" asp-action="BanClient" asp-route-id="@user.Id" class="btn btn-danger">Ban Client</a>
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		const currencySymbols = {
+			USD: "$", CAD: "$", EUR: "€", GBP: "£",
+			JPY: "¥", MXN: "$", KWD: "د.ك"
+		};
+
+		function formatPrice(value, currency) {
+			const symbol = currencySymbols[currency] || '';
+			return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+		}
+
+		function convertPrice(priceInUsd, currency) {
+			if (!exchangeRates[currency] || !exchangeRates["USD"]) return priceInUsd;
+			return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+		}
+
+		// Convert all price elements
+		document.querySelectorAll('.market-price').forEach(option => {
+			const balanceSpan = option.querySelector('.balance-text');
+			if (!balanceSpan) return;
+
+			const priceUsd = parseFloat(option.getAttribute('data-usd'));
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			balanceSpan.textContent = formatted;
+		});
+
+		// Update balance display
+		const balanceEl = document.getElementById("convertedBalance");
+		if (balanceEl) {
+			const value = parseFloat(balanceEl.getAttribute("data-value")) || 0;
+			balanceEl.textContent = formatPrice(value, selectedCurrency);
+		}
+	});
+</script>

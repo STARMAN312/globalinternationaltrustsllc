@@ -1,0 +1,619 @@
+﻿@model AccountViewVM
+@using System.Text.RegularExpressions
+@{
+	ViewData["Title"] = "Global International Trust Bank - Account";
+	Layout = "_ClientLayout";
+	var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth", "ThomasLDille", "FrederickEWidlund" };
+	bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
+							privilegedUsers.Contains(User.Identity.Name);
+}
+
+<div class="banner">
+	<div class="geometric-shapes">
+		<div class="shape"></div>
+		<div class="shape"></div>
+		<div class="shape"></div>
+	</div>
+
+	<div class="content">
+		<h1 class="main-heading">Timely Information</h1>
+		<h2 class="sub-heading">About Your Investments</h2>
+	</div>
+</div>
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb breadcrumb-style mg-b-0">
+		<li class="breadcrumb-item">
+			<a>Global International Trust Bank</a>
+		</li>
+		<li class="breadcrumb-item active">
+			<a>Account</a>
+		</li>
+	</ol>
+</nav>
+
+<div class="row account-information">
+	<div class="col-xxl-12 col-xl-12 col-lg-12 col-md-12 col-sm-12">
+		<div class="row">
+			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+				<div class="card p-2">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+								<div class="d-flex flex-column flex-lg-row justify-content-between">
+									<div class="text-justified align-items-center">
+										<h3 class="text-dark font-weight-semibold mb-2 mt-0">Welcome back, <span class="text-primary">@Model.FullName</span></h3>
+									</div>
+									<div class="mt-3 mt-lg-0">
+										<a class="btn btn-dark" href="https://video.goldco.com/tom-selleck-gold-silver-kit-g-042125/?cq_net=%7Bnetwork%7D&cq_plac=%7Bplacement%7D&cq_plt=gdp&cq_term=%7Bkeyword%7D&gad_campaignid=22633263768&gad_source=2&gclid=Cj0KCQjws4fEBhD-ARIsACC3d2-ThJQ0aEBV_BBoWJ6T-aRaCBDV_cLNi_CEfphx-ddPjh2K7vwiKpQaAtprEALw_wcB&ls=001-Video-Youtube-Internal&sfcid=701Qh00000Xbb5e&utm_campaign=701Qh00000Xbb5e&utm_medium=Video&utm_medium=cpc&utm_source=Youtube-Internal&utm_source=google&utm_term=" target="_blank">
+											<img src="~/img/75f068f3-white-goldco-logo-gold-flame_106g02g06e02g000000000.png" alt="GoldCo Logo" style="height: 32px; width: auto;">
+										</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			@if (Model.IsBanned)
+			{
+				<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+					<div class="card p-2 bg-danger">
+						<div class="card-body text-white d-flex flex-column">
+							@* <span class="tx-bold tx-15">Your account is currently banned for the following reason: </span> *@
+							<span class="tx-15">
+								@Model.BanReason
+							</span>
+							<span class="mt-3 tx-15">
+								All actions such as deposits, withdrawals, and transfers have been disabled. Please contact support for more information on this matter.
+							</span>
+						</div>
+					</div>
+				</div>
+			}
+			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+				<div class="card p-2">
+					<div class="d-flex flex-wrap justify-content-center align-items-center">
+						<div class="mx-2 d-inline-block">
+							<span class="tx-18 text-dark">Currency: </span>
+						</div>
+						@foreach (var rate in Model.ConvertedBalances)
+						{
+							Dictionary<string, string> currencySymbols = new Dictionary<string, string>
+						{
+						{ "USD", "$" },
+						{ "CAD", "$" },
+						{ "EUR", "€" },
+						{ "GBP", "£" },
+						{ "JPY", "¥" },
+						{ "MXN", "$" },
+						{ "KWD", "د.ك" }
+						};
+
+							// Assign class based on currency key (USD gets 'btn-info' by default)
+							string btnClass = rate.Key == "USD" ? "btn btn-info currency-btn" : "btn btn-info-light currency-btn";
+
+							<div class="mx-2 d-inline-block mt-1">
+								<button class="@btnClass"
+										data-currency="@rate.Key"
+										data-value="@rate.Value">
+									<span class="me-1">@currencySymbols[rate.Key]</span> @rate.Key
+								</button>
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 col-md-12 col-xs-12">
+				<div class="card px-3 ps-4">
+					<div class="card-body p-0">
+						<div>
+							<div class="card-header pb-1">
+								<h3 class="card-title mb-2">Account Summary</h3>
+							</div>
+							<div class="browser-stats">
+								<div class="d-flex flex-column flex-lg-row align-items-lg-center item bd-y pt-4 pb-3">
+									<div class="d-flex">
+										<div class="">
+											<span class="font-weight-semibold tx-20">Total Balance</span>
+										</div>
+									</div>
+									<div class="ms-auto my-auto">
+										<div class="d-flex">
+											<span class="me-4 mt-1 font-weight-semibold text-success tx-20" id="convertedBalance">$@Model.TotalBalance.ToString("N2") USD</span>
+										</div>
+									</div>
+								</div>
+								@foreach (BankAccount bankAccount in Model.BankAccounts)
+								{
+									<div class="d-flex flex-column flex-lg-row align-items-lg-center item bd-y pt-4 pb-3">
+										<div class="d-flex">
+											<div>
+												<h6>@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account</h6>
+												<span class="tx-12">
+													Account number:
+													<span class="account-number-mask" data-full="@bankAccount.AccountNumber">
+														****@bankAccount.AccountNumber[^4..]
+													</span>
+												</span>
+											</div>
+										</div>
+										<div class="ms-auto my-auto">
+											<div class="d-flex">
+												<span class="me-4 mt-1 font-weight-semibold tx-16 market-price" data-usd="@bankAccount.Balance">$@bankAccount.Balance.ToString("N2")</span>
+											</div>
+										</div>
+									</div>
+								}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+				<div class="card px-3 ps-4">
+					<div class="row index1">
+						<div class="card-header pb-1">
+							<h3 class="card-title mb-2">Recent Transactions</h3>
+						</div>
+						@foreach (TransactionVM transaction in Model.Transactions)
+						{
+							<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+								<a class="row p-1 bd-y">
+									<div class="col-2 d-flex align-items-center justify-content-center">
+										@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal")
+										{
+											<div class="circle-icon bg-warning text-center align-self-center overflow-hidden shadow">
+												<i class="fa fa-angle-double-up tx-15 text-white"></i>
+											</div>
+										}
+										else if (transaction.Type.ToString() == "ServiceFee")
+										{
+											<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
+												<i class="fa fa-cogs tx-15 text-white"></i>
+											</div>
+										}
+										else
+										{
+											<div class="circle-icon bg-success text-center align-self-center overflow-hidden shadow">
+												<i class="fa fa-angle-double-down tx-15 text-white"></i>
+											</div>
+										}
+									</div>
+									<div class="col-10">
+										<div class="pt-4 pb-3">
+											<div class="d-flex	tx-15">
+												<h6 class="mb-2">@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1") - @transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</h6>
+												@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal" || transaction.Type.ToString() == "ServiceFee")
+												{
+													<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="debit">
+														-$@transaction.Amount.ToString("N2")
+													</span>
+												}
+												else
+												{
+													<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="credit">
+														+$@transaction.Amount.ToString("N2")
+													</span>
+												}
+											</div>
+											<div class="pb-0 mt-0">
+												<div class="d-flex">
+													<h4 class="tx-18 font-weight-semibold mb-0">@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</h4>
+												</div>
+											</div>
+										</div>
+									</div>
+								</a>
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+			@if (!Model.IsBanned)
+			{
+				<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+					<div class="card p-2">
+						<div class="d-flex flex-wrap justify-content-center align-items-center">
+							<a asp-controller="Account" asp-action="Deposit" class="btn btn-info-light btn-lg btn-block">
+								Deposit to Account
+							</a>
+							<a asp-controller="Account" asp-action="TransferFundsToInternalAccount" class="btn btn-primary-light btn-lg btn-block">
+								Transfer Between My Accounts
+							</a>
+							<a asp-controller="Account" asp-action="TransferFundsToExternalAccount" class="btn btn-primary-light btn-lg btn-block">
+								Transfer to External Account
+							</a>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+	@if (Model.MarketData != null)
+	{
+		<div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 mg-md-t-0">
+			<div class="card bg-gray-200 bd-0">
+				<div class="card-body">
+					<h5 class="card-title tx-dark tx-medium mg-b-10">Market Overview</h5>
+					@foreach (var category in Model.MarketData)
+					{
+						<h4 class="mt-4">@category.Key</h4>
+						<div aria-multiselectable="true" class="accordion" id="accordion-@category.Key" role="tablist">
+							@{
+								var i = 0;
+							}
+							@foreach (var item in category.Value)
+							{
+								var percent = item.ChangePercent ?? 0;
+								var isPositive = percent >= 0;
+								var arrowIcon = isPositive ? "fe-trending-up" : "fe-trending-down";
+								var colorClass = isPositive ? "text-success" : "text-danger";
+								var collapseId = $"collapse-{category.Key}-{i}";
+								var headingId = $"heading-{category.Key}-{i}";
+								<div class="card mb-0">
+									<div class="card-header" id="@headingId" role="tab">
+										<a class="accordion-toggle collapsed"
+										   data-bs-toggle="collapse"
+										   data-bs-parent="#accordion11"
+										   href="#@collapseId"
+										   aria-expanded="false"
+										   aria-controls="@collapseId">
+											<div class="d-flex align-items-center item my-2">
+												<div class="d-flex">
+													@if (!string.IsNullOrEmpty(item.LogoUrl))
+													{
+														<img src="@item.LogoUrl"
+															 alt="@item.Symbol"
+															 class="rounded-circle mx-2 ht-30 wd-30 me-2" />
+													}
+													else
+													{
+														<img src="~/img/@(item.Symbol.ToLower().Trim().Replace(" ", "").Replace(":", "")).png"
+															 alt="@item.Symbol"
+															 class="rounded-circle mx-2 ht-30 wd-30 me-2"
+															 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+														<div class="avatar bg-info rounded-circle align-items-center justify-content-center mx-2" style="display: none;">
+															@item.Symbol?[0]
+														</div>
+													}
+													<div class="">
+														<h6 class="">@item.Symbol</h6>
+														<span class="text-muted tx-12">@item.CompanyName</span>
+													</div>
+												</div>
+												<div class="ms-auto my-auto">
+													<div class="d-flex">
+														<span class="@colorClass fs-13 my-auto">
+															<i class="fe @arrowIcon @colorClass mx-2 my-auto"></i>
+															@percent.ToString("N2")%
+														</span>
+													</div>
+												</div>
+											</div>
+										</a>
+									</div>
+									<div id="@collapseId"
+										 class="collapse"
+										 role="tabpanel"
+										 aria-labelledby="@headingId"
+										 data-bs-parent="#accordion11">
+										<div class="card-body panel-body">
+											<div class="row index1">
+												<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+													<div class="row border-end bd-xs-e-0 p-3">
+														<div class="col-3 d-flex align-items-center justify-content-center">
+															<div class="circle-icon bg-primary text-center align-self-center overflow-hidden shadow">
+																<i class="fas fa-dollar-sign tx-15 text-white"></i>
+															</div>
+														</div>
+														<div class="col-9 py-0">
+															<div class="pt-4 pb-3">
+																<div class="d-flex">
+																	<h6 class="mb-2 tx-12">Current price</h6>
+																</div>
+																<div class="pb-0 mt-0">
+																	<div class="d-flex">
+																		<h4 class="tx-18 font-weight-semibold mb-0 market-price" data-usd="@item.Current">@item.Current?.ToString("N2")</h4>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+												<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+													<div class="row border-end bd-xs-e-0 p-3">
+														<div class="col-3 d-flex align-items-center justify-content-center">
+															<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
+																<i class="fas fa-exchange-alt tx-15 text-white"></i>
+															</div>
+														</div>
+														<div class="col-9 py-0">
+															<div class="pt-4 pb-3">
+																<div class="d-flex">
+																	<h6 class="mb-2 tx-12">Change in price</h6>
+																</div>
+																<div class="pb-0 mt-0">
+																	<div class="d-flex">
+																		<h4 class="tx-18 font-weight-semibold mb-0 market-price" data-usd="@item.Change">@item.Change?.ToString("N2")</h4>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+												<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+													<div class="row border-end bd-xs-e-0  p-3">
+														<div class="col-3 d-flex align-items-center justify-content-center">
+															<div class="circle-icon bg-success text-center align-self-center overflow-hidden shadow">
+																<i class="mdi mdi-chevron-double-up tx-15 text-white"></i>
+															</div>
+														</div>
+														<div class="col-9">
+															<div class="pt-4 pb-3">
+																<div class="d-flex">
+																	<h6 class="mb-2 tx-12">Daily High</h6>
+																</div>
+																<div class="pb-0 mt-0">
+																	<div class="d-flex">
+																		<h4 class="tx-18 font-weight-semibold mb-0 market-price" data-usd="@item.High">@item.High?.ToString("N2")</h4>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+												<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+													<div class="row  p-3">
+														<div class="col-3 d-flex align-items-center justify-content-center">
+															<div class="circle-icon bg-danger text-center align-self-center overflow-hidden shadow">
+																<i class="mdi mdi-chevron-double-down tx-15 text-white"></i>
+															</div>
+														</div>
+														<div class="col-9">
+															<div class="pt-4 pb-3">
+																<div class="d-flex	">
+																	<h6 class="mb-2 tx-12">Daily Low</h6>
+																</div>
+																<div class="pb-0 mt-0">
+																	<div class="d-flex">
+																		<h4 class="tx-18 font-weight-semibold mb-0 market-price" data-usd="@item.Low">@item.Low?.ToString("N2")</h4>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								i++;
+							}
+						</div>
+					}
+				</div>
+			</div>
+		</div>
+	}
+
+	@if (TempData["ExternalTransferModal"]?.ToString() == "Active" && isPrivilegedUser)
+	{
+		<div class="modal fade" id="modaldemo4">
+			<div class="modal-dialog modal-dialog-centered" role="document">
+				<div class="modal-content tx-size-sm">
+					<div class="modal-header">
+						<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+					</div>
+					<div class="modal-body tx-center pd-y-20 pd-x-20">
+						<i class="icon ion-ios-checkmark-circle-outline tx-100 tx-success lh-1 mg-t-20 d-inline-block"></i>
+						<h4 class="tx-success tx-semibold mg-b-20">Success</h4>
+						<p class="mg-b-20 mg-x-20">Transfer processed successfully</p><button aria-label="Close" class="btn ripple btn-success pd-x-25" data-bs-dismiss="modal" type="button">Continue</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			window.addEventListener("DOMContentLoaded", function () {
+			var modal = new bootstrap.Modal(document.getElementById('modaldemo4'));
+			modal.show();
+			});
+		</script>
+	}
+	else if (TempData["ExternalTransferModal"]?.ToString() == "Active")
+	{
+		<div class="modal fade active" id="modaldemo5">
+			<div class="modal-dialog modal-dialog-centered" role="document">
+				<div class="modal-content tx-size-sm">
+					<div class="modal-header">
+						<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+					</div>
+					<div class="modal-body tx-center pd-y-20 pd-x-20">
+						<i class="icon icon ion-ios-close-circle-outline tx-100 tx-danger lh-1 mg-t-20 d-inline-block"></i>
+						<h4 class="tx-danger mg-b-20">Error: Cannot proccess your transfer.</h4>
+						<p class="mg-b-20 mg-x-20">An error occurred, please try again later.</p><button aria-label="Close" class="btn ripple btn-danger pd-x-25" data-bs-dismiss="modal" type="button">Continue</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			window.addEventListener("DOMContentLoaded", function () {
+			var modal = new bootstrap.Modal(document.getElementById('modaldemo5'));
+			modal.show();
+			});
+		</script>
+	}
+	@if (TempData["InternalTransferModal"]?.ToString() == "Active")
+	{
+		<div class="modal fade" id="modaldemo4">
+			<div class="modal-dialog modal-dialog-centered" role="document">
+				<div class="modal-content tx-size-sm">
+					<div class="modal-header">
+						<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+					</div>
+					<div class="modal-body tx-center pd-y-20 pd-x-20">
+						<i class="icon ion-ios-checkmark-circle-outline tx-100 tx-success lh-1 mg-t-20 d-inline-block"></i>
+						<h4 class="tx-success tx-semibold mg-b-20">Success</h4>
+						<p class="mg-b-20 mg-x-20">Transfer processed successfully</p><button aria-label="Close" class="btn ripple btn-success pd-x-25" data-bs-dismiss="modal" type="button">Continue</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			window.addEventListener("DOMContentLoaded", function () {
+			var modal = new bootstrap.Modal(document.getElementById('modaldemo4'));
+			modal.show();
+			});
+		</script>
+	}
+</div>
+@if (!Model.IsBanned)
+{
+	<div class="d-flex flex-column flex-lg-row justify-content-between mt-4 account-information">
+		<div class="d-flex flex-column flex-lg-row">
+			<a class="btn btn-primary-light mt-2 mt-lg-0" asp-action="GenerateStatement" asp-controller="Account">Generate Statement</a>
+			<a class="btn btn-primary-light mt-2 mt-lg-0 ms-0 ms-lg-2" asp-action="ResetPassword" asp-controller="Account">Reset Your Password</a>
+		</div>
+		<div class="d-flex flex-column flex-lg-row">
+			<a class="btn btn-primary-light mt-2 mt-lg-0" asp-action="Download8300" asp-controller="Account">Download Form 8300</a>
+			<a class="btn btn-primary-light mt-2 mt-lg-0 ms-0 ms-lg-2" asp-action="DownloadT3" asp-controller="Account">Download T3 Tax Form</a>
+		</div>
+	</div>
+}
+<div class="accent-line2 mt-5"></div>
+<div class="row row-sm contact-info">
+	<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
+		<div class="card bg-gray-400 bd-0">
+			<div class="card-body text-muted">
+				<h5 class="card-title text-dark tx-medium mg-b-10">Vancouver Office</h5>
+				<p class="card-subtitle mg-b-15 mt-3">Marine Building</p>
+				<p class="card-subtitle mg-b-15">355 Burrard Street • Suite 1610</p>
+				<p class="card-subtitle mg-b-15">Vancouver, BC V6C 2GB</p>
+				<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">vancouver@guardiancapital.com</span></p>
+				<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
+			</div>
+		</div>
+	</div>
+	<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
+		<div class="card bg-gray-400 bd-0">
+			<div class="card-body text-muted">
+				<h5 class="card-title text-dark tx-medium mg-b-10">Calgary Office</h5>
+				<p class="card-subtitle mg-b-15 mt-3">Bentall Kennedy Building</p>
+				<p class="card-subtitle mg-b-15">1030 - 640 5th Avenue S.W.</p>
+				<p class="card-subtitle mg-b-15">Calgary, AB T2P 3G4</p>
+				<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">calgary@guardiancapital.com</span></p>
+				<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
+			</div>
+		</div>
+	</div>
+	<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
+		<div class="card bg-gray-400 bd-0">
+			<div class="card-body text-muted">
+				<h5 class="card-title text-dark tx-medium mg-b-10">Toronto Office</h5>
+				<p class="card-subtitle mg-b-15 mt-3">Commerce Court West</p>
+				<p class="card-subtitle mg-b-15">199 Bay Street • Suite 3100</p>
+				<p class="card-subtitle mg-b-15">PO Box 201 • Toronto, Ontario. M5L 1E8</p>
+				<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">toronto@guardiancapital.com</span></p>
+				<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
+				<p class="card-subtitle mg-b-15">T: <span class="text-dark">437-886-2825</span></p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+
+	const exchangeRates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ConvertedBalances));
+	localStorage.setItem('exchangeRates', JSON.stringify(exchangeRates));
+	let selectedCurrency = localStorage.getItem('selectedCurrency') || 'USD';
+
+	const currencySymbols = {
+		USD: "$",
+		CAD: "$",
+		EUR: "€",
+		GBP: "£",
+		JPY: "¥",
+		MXN: "$",
+		KWD: "د.ك"
+	};
+
+	function formatPrice(value, currency) {
+		const symbol = currencySymbols[currency] || '';
+		return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+	}
+
+	function convertPrice(priceInUsd, currency) {
+		if (!exchangeRates[currency]) return priceInUsd;
+		return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+	}
+
+		function updateMarketPrices(currency) {
+		document.querySelectorAll('.market-price').forEach(td => {
+			const priceUsd = parseFloat(td.getAttribute('data-usd'));
+			const type = td.getAttribute('data-type');
+
+			if (!isNaN(priceUsd)) {
+				const converted = convertPrice(priceUsd, currency);
+				const formatted = formatPrice(converted, currency);
+				if(type === "debit"){
+					sign = "-";
+				}else if(type === "credit"){
+					sign = "+";
+				}else{
+					sign = "";
+				}
+
+				td.textContent = `${sign}${formatted}`;
+			}
+		});
+	}
+
+	function setCurrencyDisplay(currency, value) {
+		const display = document.getElementById('convertedBalance');
+		const symbol = currencySymbols[currency] ?? '';
+		display.textContent = `${symbol}${value.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${currency}`;
+
+		document.querySelectorAll('.currency-btn').forEach(btn => {
+			btn.classList.remove('btn-info');
+			btn.classList.add('btn-info-light');
+		});
+
+		const selectedBtn = document.querySelector(`.currency-btn[data-currency="${currency}"]`);
+		if (selectedBtn) {
+			selectedBtn.classList.remove('btn-info-light');
+			selectedBtn.classList.add('btn-info');
+		}
+
+		updateMarketPrices(currency);
+	}
+
+	document.querySelectorAll('.currency-btn').forEach(button => {
+		button.addEventListener('click', function () {
+			const currency = this.getAttribute('data-currency');
+			const value = parseFloat(this.getAttribute('data-value'));
+
+			setCurrencyDisplay(currency, value);
+
+			localStorage.setItem('selectedCurrency', currency);
+		});
+	});
+
+	window.addEventListener('DOMContentLoaded', () => {
+		const savedCurrency = localStorage.getItem('selectedCurrency') || "USD";
+		const savedButton = document.querySelector(`.currency-btn[data-currency="${savedCurrency}"]`);
+		if (savedButton) {
+			const value = parseFloat(savedButton.getAttribute('data-value'));
+			setCurrencyDisplay(savedCurrency, value);
+		}
+	});
+
+	document.getElementById("internalTransferForm").addEventListener("submit", function () {
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+		document.getElementById("internalCurrency").value = selectedCurrency;
+	});
+
+	document.getElementById("externalTransferForm").addEventListener("submit", function () {
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+		document.getElementById("externalCurrency").value = selectedCurrency;
+	});
+
+</script>

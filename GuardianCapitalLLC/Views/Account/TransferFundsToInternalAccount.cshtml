@@ -1,0 +1,256 @@
+﻿@model InternalTransferFundsVM
+@using System.Text.RegularExpressions
+@using System.Globalization
+
+@{
+	Layout = "_ClientLayout";
+	ViewData["Title"] = "Global International Trust Bank - Transfer Funds";
+}
+
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb breadcrumb-style mg-b-0">
+		<li class="breadcrumb-item">
+			<a>Global International Trust Bank</a>
+		</li>
+		<li class="breadcrumb-item">
+			<a asp-controller="Account" asp-action="Index">Account</a>
+		</li>
+		<li class="breadcrumb-item active">Transfer funds to internal account</li>
+	</ol>
+</nav>
+
+<div class="mt-2 account-information">
+	<div class="card bg-gray-200 bd-0">
+		<div class="card-body">
+			<h5 class="tx-dark tx-medium mg-b-10">Transfer funds between accounts</h5>
+			<form asp-action="ReviewInternalTransfer" method="post">
+				@if (!ViewData.ModelState.IsValid)
+				{
+					<div class="card bg-warning text-white">
+						<div class="card-body d-flex align-items-center p-3">
+							<i class="fas fa-exclamation-circle me-2"></i>
+							<div asp-validation-summary="ModelOnly" class="validation-summary-no-bullets flex-grow-1"></div>
+						</div>
+					</div>
+				}
+				<input type="hidden" id="Amount" asp-for="Amount" />
+				<div class="form-group">
+					<label for="fromAccount">From Account</label>
+					<select class="form-control" asp-for="FromAccountId" id="fromAccount">
+						<option disabled selected value="">-- Select source account --</option>
+						@foreach (var acc in Model.BankAccounts)
+						{
+							<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+								@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1")
+								- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span>
+							</option>
+						}
+					</select>
+				</div>
+
+				<div class="form-group mt-2">
+					<label for="toAccount">To Account</label>
+					<select class="form-control" asp-for="ToAccountId" id="toAccount">
+						<option disabled selected value="">-- Select destination account --</option>
+						@foreach (var acc in Model.BankAccounts)
+						{
+							<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+								@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1")
+								- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span>
+							</option>
+						}
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label>Amount</label>
+					<div class="input-group mb-3">
+						<span class="input-group-text bg-info-transparent text-info" id="basic-addon1">$</span>
+						<input type="text" id="AmountInput" name="Amount" class="form-control" placeholder="0.00" />
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label class="form-label">Password / Security Pin</label>
+					<input asp-for="Pin" type="password" class="form-control" placeholder="Enter your password / pin">
+				</div>
+
+				<div class="modal-footer">
+					<a asp-controller="Account" asp-action="Index" class="btn btn-outline-dark ms-lg-4 px-5 ms-0">Cancel</a>
+					<button type="submit" class="btn btn-info px-5">Review Transfer</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<script>
+
+	const formattedInput = document.getElementById('AmountInput');
+	const hiddenInput = document.getElementById('Amount');
+
+	formattedInput.addEventListener('input', function () {
+		const rawValue = formattedInput.value.replace(/,/g, '');
+		hiddenInput.value = rawValue;
+	});
+
+	document.getElementById('AmountInput').addEventListener('input', function (e) {
+		const input = e.target;
+		let value = input.value;
+
+		// Save cursor position before formatting
+		let selectionStart = input.selectionStart;
+
+		// Count commas before formatting
+		const commasBefore = (value.slice(0, selectionStart).match(/,/g) || []).length;
+
+		// Remove all except digits and dot
+		value = value.replace(/[^\d.]/g, '');
+
+		// Allow only one dot
+		const parts = value.split('.');
+		if (parts.length > 2) {
+			value = parts.shift() + '.' + parts.join('');
+		}
+
+		const endsWithDot = value.endsWith('.');
+
+		// Split integer and decimal parts
+		const [intPart, decimalPartRaw] = value.split('.');
+		let decimalPart = decimalPartRaw || '';
+
+		if (decimalPart.length > 2) {
+			decimalPart = decimalPart.substring(0, 2);
+		}
+
+		// Format integer with commas
+		const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+		// Rebuild formatted value
+		const formattedValue = endsWithDot
+			? `${intFormatted}.`
+			: decimalPart
+			? `${intFormatted}.${decimalPart}`
+			: intFormatted;
+
+		// Set the formatted value
+		input.value = formattedValue;
+
+		// Count commas after formatting
+		const commasAfter = (formattedValue.slice(0, selectionStart).match(/,/g) || []).length;
+
+		const commaDifference = commasAfter - commasBefore;
+		let newPos = selectionStart + commaDifference;
+
+		if (endsWithDot && newPos === formattedValue.length - 1) {
+			newPos = formattedValue.length;
+		}
+
+		input.setSelectionRange(newPos, newPos);
+
+		// Now parse the raw number entered (in selected currency)
+		const rawAmount = parseFloat(intPart + (decimalPart ? '.' + decimalPart : ''));
+
+		// Get exchange rates and selected currency from localStorage
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		// Convert rawAmount back to USD
+		// USD amount = rawAmount * (USD rate) / (selectedCurrency rate)
+		// But in your stored data, seems like exchangeRates[currency] = rate in that currency relative to USD?
+		// Let's confirm:
+		// Your previous convertPrice function: priceInUsd * exchangeRates[currency] / exchangeRates["USD"]
+		// To convert from selectedCurrency -> USD, formula: amountInCurrency * exchangeRates["USD"] / exchangeRates[selectedCurrency]
+
+		let amountInUsd = rawAmount;
+		if (exchangeRates[selectedCurrency] && exchangeRates["USD"]) {
+			amountInUsd = rawAmount * exchangeRates["USD"] / exchangeRates[selectedCurrency];
+		}
+
+		// Set hidden input with converted amount in USD, fixed to 2 decimals
+		document.getElementById('Amount').value = amountInUsd.toFixed(2);
+	});
+
+	document.addEventListener("DOMContentLoaded", function () {
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		const currencySymbols = {
+			USD: "$", CAD: "$", EUR: "€", GBP: "£",
+			JPY: "¥", MXN: "$", KWD: "د.ك"
+		};
+
+		function formatPrice(value, currency) {
+			const symbol = currencySymbols[currency] || '';
+			return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+		}
+
+		function convertPrice(priceInUsd, currency) {
+			if (!exchangeRates[currency] || !exchangeRates["USD"]) return priceInUsd;
+			return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+		}
+
+		// Convert all price elements
+		document.querySelectorAll('.market-price').forEach(option => {
+			const balanceSpan = option.querySelector('.balance-text');
+			if (!balanceSpan) return;
+
+			const priceUsd = parseFloat(option.getAttribute('data-usd'));
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			balanceSpan.textContent = formatted;
+		});
+
+		// Update balance display
+		const balanceEl = document.getElementById("convertedBalance");
+		if (balanceEl) {
+			const value = parseFloat(balanceEl.getAttribute("data-value")) || 0;
+			balanceEl.textContent = formatPrice(value, selectedCurrency);
+		}
+	});
+
+	document.addEventListener('DOMContentLoaded', function () {
+		const fromSelect = document.getElementById('fromAccount');
+		const toSelect = document.getElementById('toAccount');
+
+		function updateSelectOptions() {
+			const selectedFrom = fromSelect.value;
+			const selectedTo = toSelect.value;
+
+			// Enable all options first
+			for (const option of fromSelect.options) {
+				option.disabled = false;
+			}
+			for (const option of toSelect.options) {
+				option.disabled = false;
+			}
+
+			// Disable selected value in the opposite select
+			if (selectedTo) {
+				for (const option of fromSelect.options) {
+					if (option.value === selectedTo) {
+						option.disabled = true;
+					}
+				}
+			}
+
+			if (selectedFrom) {
+				for (const option of toSelect.options) {
+					if (option.value === selectedFrom) {
+						option.disabled = true;
+					}
+				}
+			}
+		}
+
+		fromSelect.addEventListener('change', updateSelectOptions);
+		toSelect.addEventListener('change', updateSelectOptions);
+
+		// Initial update in case defaults are set
+		updateSelectOptions();
+	});
+
+</script>

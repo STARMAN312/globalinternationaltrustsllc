@@ -1,0 +1,266 @@
+﻿@model UserViewVM
+@using System.Text.RegularExpressions
+@using System.Globalization
+
+<div class="mt-2">
+	<div class="card bg-gray-200 bd-0">
+		<div class="card-body">
+			@if (TempData["Username"] != null && TempData["PIN"] != null)
+			{
+				<div class="card bg-info text-white">
+					<div class="card-body">
+						<div>
+							Username: <strong id="generated-username">@TempData["Username"]</strong>
+							<br />
+							Password: <strong id="generated-pin">@TempData["PIN"]</strong>
+						</div>
+						<div class="mt-2 mb-2">
+							<span>Make sure to copy this information and give it to the client.</span>
+						</div>
+						<button type="button" class="btn btn-warning btn-sm mt-2" onclick="copyToClipboard()">Copy information</button>
+					</div>
+				</div>
+			}
+			@if (!ViewData.ModelState.IsValid)
+			{
+				<div class="card bg-warning text-white">
+					<div class="card-body d-flex align-items-center p-3">
+						<i class="fas fa-exclamation-circle me-2"></i>
+						<div asp-validation-summary="ModelOnly" class="validation-summary-no-bullets flex-grow-1"></div>
+					</div>
+				</div>
+			}
+			<div class="main-contact-info-body p-4">
+				<div>
+					<h5 class="tx-dark tx-medium mg-b-10">@Model.FullName</h5>
+				</div>
+				<div class="media-list pb-0">
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Work Phone:</label> <span class="tx-medium">@Model.WorkPhone</span>
+							</div>
+							<div>
+								<label>Personal Phone:</label> <span class="tx-medium">@Model.PersonalPhone</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Work Email:</label> <span class="tx-medium">@Model.WorkEmail</span>
+							</div>
+							<div>
+								<label>Personal Email: </label> <span class="tx-medium">@Model.PersonalEmail</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Current Address:</label> <span class="tx-medium">@Model.Address</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							@foreach (BankAccount bankAccount in Model.BankAccounts)
+							{
+								<div data-usd="@bankAccount.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+									<label>@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account:</label><span class="tx-medium"><strong class="balance-text">$@bankAccount.Balance.ToString("N2")</strong></span>
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+				<div class="mt-5 d-flex flex-column flex-lg-row justify-content-between">
+					<a asp-controller="BankAccount" asp-action="Index" asp-route-id="@Model.Id" asp-route-returnUrl="@Url.Action("Details", "Users", new { id = Model.Id })" class="btn btn-info">Manage Bank Accounts</a>
+
+					<form asp-controller="Users" asp-action="GenerateNewPassword" asp-route-id="@Model.Id" method="post" class="d-inline mt-2 mt-lg-0">
+						@Html.AntiForgeryToken()
+
+						<input type="text" name="customPassword" class="form-control d-inline w-auto me-2" placeholder="Optional custom password" />
+
+						<button type="submit" class="btn btn-warning">Generate New Password</button>
+					</form>
+				</div>
+				<div class="mt-5">
+					<form asp-controller="Users" asp-action="SendTaxFormEmail" method="post" class="d-inline mt-2 mt-lg-0">
+						@Html.AntiForgeryToken()
+
+						<input name="userId" type="text" value="@Model.Id" hidden />
+
+						<input name="userEmail" type="email" value="@Model.PersonalEmail" hidden />
+						<div class="form-group">
+							<input type="text" name="date" class="form-control" placeholder="Enter the date of the transaction" required/>
+						</div>
+
+						<div class="form-group">
+							<input type="text" name="amount" class="form-control" placeholder="Enter the amount of the transaction (in USD)" required/>
+						</div>
+
+						<input type="text" name="userFullName" value="@Model.FullName" hidden/>
+
+						<button type="submit" class="btn btn-warning">Send Email</button>
+					</form>
+				</div>
+				@if (Model.Files != null && Model.Files.Any())
+				{
+					<div class="mt-5">
+						<h5 class="tx-dark tx-medium mg-b-10">Uploaded Files</h5>
+					</div>
+					<div class="row">
+						@foreach (var file in Model.Files)
+						{
+							<div class="col-xl-2 col-md-4 col-sm-6 mt-1">
+								<div class="card p-0 border">
+									<div class="d-flex align-items-center px-3 pt-3">
+										<div class="float-end ms-auto">
+											<a href="#" class="option-dots" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												<i class="fe fe-more-vertical"></i>
+											</a>
+											<div class="dropdown-menu">
+												<a class="dropdown-item" asp-action="Download" asp-controller="Users" asp-route-id="@file.Id">
+													<i class="fe fe-download me-2"></i> Download
+												</a>
+
+												<form asp-controller="Users" asp-action="DeleteFile" method="post" class="dropdown-item p-0"
+													  onsubmit="return confirm('Are you sure you want to delete this file?');">
+													@Html.AntiForgeryToken()
+													<input type="hidden" name="userId" value="@Model.Id" />
+													<input type="hidden" name="id" value="@file.Id" />
+													<button type="submit" class="btn btn-link dropdown-item text-danger">
+														<i class="fe fe-trash me-2"></i> Delete
+													</button>
+												</form>
+											</div>
+										</div>
+									</div>
+									<div class="card-body pt-0 text-center">
+										<div class="file-manger-icon">
+											<img src="~/img/files/doc.png" alt="file icon" class="br-7" />
+										</div>
+										<h6 class="mb-1 font-weight-semibold text-truncate" style="max-width: 100%;">
+											@file.FileName
+										</h6>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				}
+				
+				<div>
+					<h5 class="tx-dark tx-medium mg-b-10 mt-5">Transactions</h5>
+				</div>
+				<div class="table-responsive  export-table mt-2">
+					<table id="file-datatable" class="table table-bordered text-nowrap key-buttons border-bottom">
+						<thead>
+							<tr>
+								<th class="border-bottom-0">Date</th>
+								<th class="border-bottom-0">Account</th>
+								<th class="border-bottom-0">Transaction</th>
+								<th class="border-bottom-0">Amount</th>
+								<th class="border-bottom-0">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (TransactionVM transaction in Model.Transactions)
+							{
+								<tr>
+									<td>@transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</td>
+									<td>@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1")</td>
+									<td>@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</td>
+									@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal" || transaction.Type.ToString() == "ServiceFee")
+									{
+										<td class="market-price" data-usd="@transaction.Amount" data-type="debit">-$@transaction.Amount.ToString("N2")</td>
+									}
+									else
+									{
+										<td class="market-price" data-usd="@transaction.Amount" data-type="credit">+$@transaction.Amount.ToString("N2")</td>
+									}
+									<td>
+										<a asp-controller="Users" asp-action="TransactionDetails" asp-route-id="@transaction.Id" asp-route-returnUrl="@Url.Action("Details", "Users", new { id = Model.Id })" class="btn btn-info">Details</a>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	function copyToClipboard() {
+		const username = document.getElementById('generated-username').innerText;
+		const pin = document.getElementById('generated-pin').innerText;
+		const text = `Username: ${username}\nPassword: ${pin}`;
+
+		navigator.clipboard.writeText(text)
+			.then(() => {
+				alert('Copied to clipboard!');
+			})
+			.catch(err => {
+				console.error('Error copying to clipboard: ', err);
+			});
+	}
+
+		document.addEventListener("DOMContentLoaded", function () {
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		const currencySymbols = {
+			USD: "$", CAD: "$", EUR: "€", GBP: "£",
+			JPY: "¥", MXN: "$", KWD: "د.ك"
+		};
+
+		function formatPrice(value, currency) {
+			const symbol = currencySymbols[currency] || '';
+			return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+		}
+
+		function convertPrice(priceInUsd, currency) {
+			if (!exchangeRates[currency] || !exchangeRates["USD"]) return priceInUsd;
+			return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+		}
+
+		document.querySelectorAll('.market-price').forEach(option => {
+			const balanceSpan = option.querySelector('.balance-text');
+			if (!balanceSpan) return;
+
+			const priceUsd = parseFloat(option.getAttribute('data-usd'));
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			balanceSpan.textContent = formatted;
+		});
+
+		const balanceEl = document.getElementById("convertedBalance");
+		if (balanceEl) {
+			const value = parseFloat(balanceEl.getAttribute("data-value")) || 0;
+			balanceEl.textContent = formatPrice(value, selectedCurrency);
+		}
+
+		document.querySelectorAll('td[data-usd][data-type]').forEach(td => {
+			const priceUsd = parseFloat(td.getAttribute("data-usd"));
+			const type = td.getAttribute("data-type");
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			let sign = "";
+			if (type === "debit") {
+				sign = "-";
+			} else if (type === "credit") {
+				sign = "+";
+			}
+
+			td.textContent = `${sign}${formatted}`;
+		});
+	});
+
+</script>
